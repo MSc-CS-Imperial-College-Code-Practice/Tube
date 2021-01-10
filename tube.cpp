@@ -222,7 +222,7 @@ int validate_route(char **map, int height, int width,
   int current_row_dir, current_col_dir;
   int previous_row_dir, previous_col_dir;
   char current_path_sym, previous_path_sym;
-  char lines_using[10]={};
+  char line_being_using;
   int number_of_stops;
   
   if (get_symbol_for_station_or_line(start_station) == ' ')
@@ -235,6 +235,8 @@ int validate_route(char **map, int height, int width,
   char *route_array[number_of_stops+1]; // addinf one space for NULL string
   split_string(route, ",", route_array);
 
+  number_of_line_changes = 0;
+  line_being_using = ' ';
   for(int i=0; route_array[i] != NULL; i++){
     previous_row = current_row;
     previous_col = current_col;
@@ -268,18 +270,14 @@ int validate_route(char **map, int height, int width,
     }
     
     if(is_line(current_path_sym)){
-      bool exist = false;
-      if(strlen(lines_using) == 0)
-        lines_using[0] = current_path_sym;
+      
+      if(line_being_using == ' ')
+        line_being_using = current_path_sym;
       else{
-        for(int i = 0; i<lines_using[i] != '\0'; i++){
-          if(lines_using[i] == current_path_sym){
-            exist = true;
-            break;
-          }
+        if(line_being_using != current_path_sym){
+          number_of_line_changes++;
+          line_being_using = current_path_sym;
         }
-        if(!exist)
-          lines_using[strlen(lines_using)] = current_path_sym;
       }  
     }
   }
@@ -289,8 +287,6 @@ int validate_route(char **map, int height, int width,
       return ERROR_ROUTE_ENDPOINT_IS_NOT_STATION;
     else
       get_station_or_line_from_symbol(current_path_sym, destination);
-
-    number_of_line_changes = strlen(lines_using) - 1;
 
     return number_of_line_changes;
 }
